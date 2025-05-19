@@ -18,42 +18,28 @@ exports.getBooks = async (req, res) => {
   const { page = 1, limit = 10, author, genre } = req.query;
 
   const where = {};
-  if (author) where.author = { [Op.iLike]: `%${author}%` }; // Case-insensitive author filter
-  if (genre) where.genre = { [Op.iLike]: `%${genre}%` };   // Case-insensitive genre filter
+  if (author) where.author = { [Op.iLike]: `%${author}%` };
+  if (genre) where.genre = { [Op.iLike]: `%${genre}%` };
 
-  // Fetch paginated and filtered books
-  const books = await Book.findAndCountAll({
+  const { count, rows } = await Book.findAndCountAll({
     where,
     offset: (page - 1) * limit,
-    limit: parseInt(limit)
+    limit: parseInt(limit),
+    include: {
+      model: Review,
+      attributes: ['rating', 'comment', 'UserId', 'createdAt'],
+    },
+    order: [['createdAt', 'DESC']],
   });
 
-  res.json(books); // Return the list of books
-};
-
-// Controller to get book details by ID, including reviews and average rating
-exports.getBookById = async (req, res) => {
-  try {
-    // Find book by primary key (ID), and include related reviews
-    const book = await Book.findByPk(req.params.id, {
-      include: {
-        model: Review,
-        limit: 10,     // Limit reviews to 10
-        offset: 0,     // Offset for pagination (could be enhanced later)
-      },
-    });
-
-    if (!book) return res.status(404).json({ error: 'Book not found' });
-
+  // Add average rating for each book
+  const booksWithAvgRating = rows.map(book => {
     const reviews = book.Reviews || [];
-
-    // Calculate average rating if reviews exist
     const avgRating = reviews.length
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : null;
+      : 0;
 
-    // Return structured book details, excluding nested duplicate "Reviews" key
-    res.json({
+    return {
       id: book.id,
       title: book.title,
       author: book.author,
@@ -61,7 +47,47 @@ exports.getBookById = async (req, res) => {
       createdAt: book.createdAt,
       updatedAt: book.updatedAt,
       averageRating: avgRating,
-      reviews, 
+      reviews,
+    };
+  });
+
+  res.json({
+    count,
+    books: booksWithAvgRating,
+  });
+};
+
+
+// Controller to get book details by ID, including reviews and average rating
+exports.getBookById = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+
+    const book = await Book.findByPk(req.params.id);
+    if (!book) return res.status(404).json({ error: 'Book not found' });
+
+    const offset = (page - 1) * limit;
+
+    const { count, rows: reviews } = await Review.findAndCountAll({
+      where: { BookId: req.params.id },
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['createdAt', 'DESC']]
+    });
+
+    const avgRating = count
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / count
+      : null;
+
+    res.json({
+      book,
+      averageRating: avgRating,
+      reviews,
+      pagination: {
+        totalReviews: count,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+      }
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });

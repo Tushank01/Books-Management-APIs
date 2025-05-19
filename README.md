@@ -52,11 +52,11 @@ curl -X POST http://localhost:3000/login -H "Content-Type: application/json" -d 
 # Add a Book (requires Bearer token)
 curl -X POST http://localhost:3000/books -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"title":"Clean Code","author":"Robert C. Martin","genre":"Programming"}'
 
-# Get Books (with optional filters and pagination)
+# Get Books (with optional filters and pagination )
 curl "http://localhost:3000/books?page=1&limit=10&author=Robert&genre=Programming"
 
-# Get Book By ID (includes reviews)
-curl http://localhost:3000/books/1
+# Get Book By ID 
+http://localhost:3000/books/1?page=1&limit=1
 
 # Add Review to Book (requires Bearer token)
 curl -X POST http://localhost:3000/books/1/reviews -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"rating":5,"comment":"Great book!"}'
