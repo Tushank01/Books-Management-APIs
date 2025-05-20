@@ -1,0 +1,15 @@
+# Node modules folder - do NOT upload!
+node_modules/
+
+# Environment variables file - secrets, API keys etc.
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
