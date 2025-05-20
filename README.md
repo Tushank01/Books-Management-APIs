@@ -16,23 +16,17 @@ PORT=3000
 DATABASE_URL=your_postgres_connection_string
 JWT_SECRET=your_jwt_secret
 ```
-
-```bash
-```
 3. Set Up PostgreSQL Database
-Ensure PostgreSQL is installed and running. Then create the database:
-```
-
-```
+```bash
 createdb bookdb
-You can also use a GUI tool like pgAdmin or run this in psql:
 ```
 
-```
+4. You can also use a GUI tool like pgAdmin or run this in psql:
+```bash
 CREATE DATABASE bookdb;
 ```
 
-3. Start the server:
+5. Start the server:
 ```bash
 npm run dev
 ```
